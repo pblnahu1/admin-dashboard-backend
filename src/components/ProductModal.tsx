@@ -19,7 +19,12 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
     price: '',
     slug: '',
     is_active: true,
+    sku: '',
+    stock: '',
+    track_inventory: false,
+    low_stock_threshold: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -30,6 +35,10 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
         price: product.price.toString(),
         slug: product.slug,
         is_active: product.is_active,
+        sku: product.sku || '',
+        stock: product.stock != null ? String(product.stock) : '',
+        track_inventory: product.track_inventory ?? false,
+        low_stock_threshold: product.low_stock_threshold != null ? String(product.low_stock_threshold) : '',
       });
     }
   }, [product]);
@@ -56,6 +65,12 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
     setError('');
     setLoading(true);
 
+    if (!user?.id) {
+      setError('Debes estar autenticado para guardar productos.');
+      setLoading(false);
+      return;
+    }
+
     const price = parseFloat(formData.price);
     if (isNaN(price) || price < 0) {
       setError('Please enter a valid price');
@@ -63,14 +78,56 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
       return;
     }
 
+    // Parse inventory numbers (optional fields)
+    const stockVal = formData.stock === '' ? null : parseInt(formData.stock, 10);
+    const lowStockVal = formData.low_stock_threshold === '' ? null : parseInt(formData.low_stock_threshold, 10);
+
+    if (stockVal != null && (isNaN(stockVal) || stockVal < 0)) {
+      setError('El stock debe ser un número entero mayor o igual a 0');
+      setLoading(false);
+      return;
+    }
+    if (lowStockVal != null && (isNaN(lowStockVal) || lowStockVal < 0)) {
+      setError('El umbral de stock bajo debe ser un número entero mayor o igual a 0');
+      setLoading(false);
+      return;
+    }
+
+    let uploadedImageUrl: string | null = product?.image_url || null;
+
+    // Upload new image if a file has been selected
+    if (imageFile) {
+      const bucket = 'product-images';
+      const ext = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const safeSlug = (formData.slug || formData.name).toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      const filePath = `${user.id}/${safeSlug}-${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, imageFile, { upsert: false, contentType: imageFile.type });
+
+      if (uploadError) {
+        setError(`Error subiendo la imagen: ${uploadError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(filePath);
+      uploadedImageUrl = publicData.publicUrl || null;
+    }
+
     const productData = {
       name: formData.name.trim(),
       description: formData.description.trim() || null,
-      image_url: formData.image_url.trim() || null,
+      image_url: uploadedImageUrl,
       price,
       slug: formData.slug.trim(),
       is_active: formData.is_active,
-      ...(product ? {} : { created_by: user?.id }),
+      sku: formData.sku.trim() || null,
+      stock: stockVal,
+      track_inventory: formData.track_inventory,
+      low_stock_threshold: lowStockVal,
+      ...(product ? {} : { created_by: user?.id, user_id: user?.id }),
     };
 
     let result;
@@ -78,7 +135,8 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
       result = await supabase
         .from('products')
         .update(productData)
-        .eq('id', product.id);
+        .eq('id', product.id)
+        .eq('user_id', user?.id || '');
     } else {
       result = await supabase.from('products').insert([productData]);
     }
@@ -101,7 +159,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-slate-900">
-            {product ? 'Edit Product' : 'Create New Product'}
+            {product ? 'Editar Producto' : 'Crear Nuevo Producto'}
           </h2>
           <button
             onClick={onClose}
@@ -121,14 +179,14 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Product Name *
+              Nombre del Producto *
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleNameChange(e.target.value)}
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
-              placeholder="Enter product name"
+              placeholder="Ingresá el nombre de tu producto"
               required
             />
           </div>
@@ -156,7 +214,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Description
+              Descripción
             </label>
             <textarea
               value={formData.description}
@@ -164,28 +222,30 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
                 setFormData((prev) => ({ ...prev, description: e.target.value }))
               }
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none resize-none"
-              placeholder="Enter product description"
+              placeholder="Ingresá la descripción de tu producto"
               rows={4}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Image URL
+              Imagen
             </label>
             <input
-              type="url"
-              value={formData.image_url}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, image_url: e.target.value }))
-              }
+              type="file"
+              id="img-product" 
+              name="imgproduct"
+              accept='image/*'
+              onChange={(e) => {
+                const file = e.target.files && e.target.files[0];
+                setImageFile(file || null);
+              }}
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
-              placeholder="https://example.com/image.jpg"
             />
-            {formData.image_url && (
+            {(imageFile || formData.image_url) && (
               <div className="mt-3">
                 <img
-                  src={formData.image_url}
+                  src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
                   alt="Preview"
                   className="w-32 h-32 object-cover rounded-lg border border-slate-200"
                   onError={(e) => {
@@ -198,7 +258,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Price *
+              Precio *
             </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-600 font-medium">
@@ -219,6 +279,62 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                SKU
+              </label>
+              <input
+                type="text"
+                value={formData.sku}
+                onChange={(e) => setFormData((prev) => ({ ...prev, sku: e.target.value }))}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+                placeholder="SKU-12345"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Stock
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.stock}
+                onChange={(e) => setFormData((prev) => ({ ...prev, stock: e.target.value }))}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="track_inventory"
+                checked={formData.track_inventory}
+                onChange={(e) => setFormData((prev) => ({ ...prev, track_inventory: e.target.checked }))}
+                className="w-5 h-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+              <label htmlFor="track_inventory" className="text-sm font-medium text-slate-700">
+                Controlar inventario (stock)
+              </label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Umbral de stock bajo
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.low_stock_threshold}
+                onChange={(e) => setFormData((prev) => ({ ...prev, low_stock_threshold: e.target.value }))}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
@@ -230,7 +346,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
               className="w-5 h-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
             />
             <label htmlFor="is_active" className="text-sm font-medium text-slate-700">
-              Product is active and visible
+              El producto está visible y activo
             </label>
           </div>
 
@@ -240,7 +356,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="submit"
@@ -248,7 +364,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5" />
-              <span>{loading ? 'Saving...' : product ? 'Update' : 'Create'}</span>
+              <span>{loading ? 'Guardando...' : product ? 'Actualizar' : 'Crear'}</span>
             </button>
           </div>
         </form>

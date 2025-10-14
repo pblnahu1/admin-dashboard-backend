@@ -40,8 +40,8 @@ export const ProfileSection = () => {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-900">Admin Profile</h2>
-        <p className="text-slate-600 mt-1">Manage your account information and view statistics</p>
+        <h2 className="text-3xl font-bold text-slate-900">Administración del Perfil</h2>
+        <p className="text-slate-600 mt-1">Administra tu perfil y ve tus estadísticas</p>
       </div>
 
       {message && (
@@ -67,10 +67,10 @@ export const ProfileSection = () => {
             <div className="p-2 bg-slate-100 rounded-lg">
               <User className="w-5 h-5 text-slate-700" />
             </div>
-            <h3 className="font-semibold text-slate-900">Total Products</h3>
+            <h3 className="font-semibold text-slate-900">Productos Totales</h3>
           </div>
           <p className="text-3xl font-bold text-slate-900">{stats.totalProducts}</p>
-          <p className="text-sm text-slate-600 mt-1">In your catalog</p>
+          <p className="text-sm text-slate-600 mt-1">En tu catálogo</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -78,10 +78,10 @@ export const ProfileSection = () => {
             <div className="p-2 bg-green-100 rounded-lg">
               <CheckCircle className="w-5 h-5 text-green-700" />
             </div>
-            <h3 className="font-semibold text-slate-900">Active Products</h3>
+            <h3 className="font-semibold text-slate-900">Productos Activos</h3>
           </div>
           <p className="text-3xl font-bold text-green-700">{stats.activeProducts}</p>
-          <p className="text-sm text-slate-600 mt-1">Currently visible</p>
+          <p className="text-sm text-slate-600 mt-1">Actualmente Visibles</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -89,10 +89,10 @@ export const ProfileSection = () => {
             <div className="p-2 bg-slate-100 rounded-lg">
               <User className="w-5 h-5 text-slate-700" />
             </div>
-            <h3 className="font-semibold text-slate-900">Inactive Products</h3>
+            <h3 className="font-semibold text-slate-900">Productos Inactivos</h3>
           </div>
           <p className="text-3xl font-bold text-slate-700">{stats.inactiveProducts}</p>
-          <p className="text-sm text-slate-600 mt-1">Currently hidden</p>
+          <p className="text-sm text-slate-600 mt-1">Actualmente Ocultos</p>
         </div>
       </div>
 
@@ -102,8 +102,8 @@ export const ProfileSection = () => {
             <User className="w-10 h-10 text-white" />
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-slate-900">Administrator</h3>
-            <p className="text-slate-600">Full system access</p>
+            <h3 className="text-2xl font-bold text-slate-900">Administrador</h3>
+            <p className="text-slate-600">Acceso completo al sistema</p>
           </div>
         </div>
 
@@ -113,7 +113,7 @@ export const ProfileSection = () => {
               <Mail className="w-6 h-6 text-slate-700" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-600">Email Address</p>
+              <p className="text-sm font-medium text-slate-600">Correo Electrónico</p>
               <p className="text-lg font-semibold text-slate-900">{user?.email}</p>
             </div>
           </div>
@@ -123,7 +123,7 @@ export const ProfileSection = () => {
               <Calendar className="w-6 h-6 text-slate-700" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-600">Account Created</p>
+              <p className="text-sm font-medium text-slate-600">Cuenta Creada</p>
               <p className="text-lg font-semibold text-slate-900">
                 {user?.created_at ? formatDate(user.created_at) : 'N/A'}
               </p>
@@ -135,8 +135,8 @@ export const ProfileSection = () => {
               <Shield className="w-6 h-6 text-slate-700" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-600">Role</p>
-              <p className="text-lg font-semibold text-slate-900">Administrator</p>
+              <p className="text-sm font-medium text-slate-600">Rol</p>
+              <p className="text-lg font-semibold text-slate-900">Administrador</p>
             </div>
           </div>
 
@@ -152,10 +152,9 @@ export const ProfileSection = () => {
         </div>
 
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-semibold text-blue-900 mb-2">Account Information</h4>
+          <h4 className="font-semibold text-blue-900 mb-2">Información de la cuenta</h4>
           <p className="text-sm text-blue-800">
-            Your account has full administrative privileges. You can create, update, and delete
-            products, as well as manage all aspects of the product catalog.
+            Su cuenta tiene privilegios administrativos completos. Puede crear, actualizar y eliminar productos, así como gestionar todos los aspectos del catálogo de productos.
           </p>
         </div>
       </div>

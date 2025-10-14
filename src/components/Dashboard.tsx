@@ -25,7 +25,7 @@ export const Dashboard = () => {
               }`}
             >
               <Package className="w-5 h-5" />
-              <span className="font-medium">Products</span>
+              <span className="font-medium">Productos</span>
             </button>
 
             <button
@@ -37,7 +37,7 @@ export const Dashboard = () => {
               }`}
             >
               <User className="w-5 h-5" />
-              <span className="font-medium">Profile</span>
+              <span className="font-medium">Perfil</span>
             </button>
           </nav>
         </aside>

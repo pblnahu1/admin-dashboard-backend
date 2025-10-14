@@ -13,21 +13,21 @@ export const Header = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900">Admin Dashboard</h1>
-            <p className="text-sm text-slate-600">Product Management System</p>
+            <p className="text-sm text-slate-600">Sistema de Administración de Productos</p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right">
             <p className="text-sm font-medium text-slate-900">{user?.email}</p>
-            <p className="text-xs text-slate-600">Administrator</p>
+            <p className="text-xs text-slate-600">Administrador</p>
           </div>
           <button
             onClick={signOut}
             className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
+            <span>Cerrar Sesión</span>
           </button>
         </div>
       </div>

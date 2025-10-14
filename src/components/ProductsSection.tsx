@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase, Product } from '../lib/supabase';
-import { Plus, Search, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Eye, EyeOff, Package } from 'lucide-react';
 import { ProductModal } from './ProductModal';
+import { useAuth } from '../contexts/AuthContext';
 
 export const ProductsSection = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -9,23 +10,33 @@ export const ProductsSection = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [slugFilter, setSlugFilter] = useState<'all' | string>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     filterProducts();
-  }, [products, searchTerm, statusFilter]);
+  }, [products, searchTerm, statusFilter, slugFilter]);
 
   const fetchProducts = async () => {
     setLoading(true);
+    if (!user?.id) {
+      setProducts([]);
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -47,6 +58,10 @@ export const ProductsSection = () => {
       );
     }
 
+    if (slugFilter !== 'all') {
+      filtered = filtered.filter((p) => p.slug === slugFilter);
+    }
+
     if (statusFilter !== 'all') {
       filtered = filtered.filter((p) =>
         statusFilter === 'active' ? p.is_active : !p.is_active
@@ -58,8 +73,13 @@ export const ProductsSection = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!user?.id) return;
 
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
 
     if (!error) {
       fetchProducts();
@@ -72,10 +92,13 @@ export const ProductsSection = () => {
   };
 
   const handleToggleActive = async (product: Product) => {
+    if (!user?.id) return;
+
     const { error } = await supabase
       .from('products')
       .update({ is_active: !product.is_active })
-      .eq('id', product.id);
+      .eq('id', product.id)
+      .eq('user_id', user.id);
 
     if (!error) {
       fetchProducts();
@@ -121,11 +144,13 @@ export const ProductsSection = () => {
   const handleBulkDelete = async () => {
     if (selectedProducts.size === 0) return;
     if (!confirm(`Delete ${selectedProducts.size} selected products?`)) return;
+    if (!user?.id) return;
 
     const { error } = await supabase
       .from('products')
       .delete()
-      .in('id', Array.from(selectedProducts));
+      .in('id', Array.from(selectedProducts))
+      .eq('user_id', user.id);
 
     if (!error) {
       setSelectedProducts(new Set());
@@ -137,9 +162,9 @@ export const ProductsSection = () => {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Products</h2>
+          <h2 className="text-3xl font-bold text-slate-900">Productos</h2>
           <p className="text-slate-600 mt-1">
-            Manage your product catalog ({filteredProducts.length} items)
+            Gestioná tu catálogo de productos ({filteredProducts.length} items)
           </p>
         </div>
         <button
@@ -147,7 +172,7 @@ export const ProductsSection = () => {
           className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
         >
           <Plus className="w-5 h-5" />
-          <span>Add Product</span>
+          <span>Agregar Producto</span>
         </button>
       </div>
 
@@ -157,7 +182,7 @@ export const ProductsSection = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search products by name, description, or slug..."
+              placeholder="Buscar productos por nombre, descripción, slug..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
@@ -169,23 +194,36 @@ export const ProductsSection = () => {
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
           >
-            <option value="all">All Status</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Inactive Only</option>
+            <option value="all">Todos los estados</option>
+            <option value="active">Sólo Activos</option>
+            <option value="inactive">Sólo Inactivos</option>
+          </select>
+
+          <select
+            value={slugFilter}
+            onChange={(e) => setSlugFilter(e.target.value as any)}
+            className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+          >
+            <option value="all">Todas las categorías (slug)</option>
+            {Array.from(new Set(products.map((p) => p.slug))).map((slug) => (
+              <option key={slug} value={slug}>
+                {slug}
+              </option>
+            ))}
           </select>
         </div>
 
         {selectedProducts.size > 0 && (
           <div className="mt-4 flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
             <span className="text-sm text-slate-700 font-medium">
-              {selectedProducts.size} selected
+              {selectedProducts.size} seleccionados
             </span>
             <button
               onClick={handleBulkDelete}
               className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Delete Selected</span>
+              <span>Borrar Seleccionados</span>
             </button>
           </div>
         )}
@@ -194,16 +232,16 @@ export const ProductsSection = () => {
       {loading ? (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
           <div className="inline-block w-8 h-8 border-4 border-slate-300 border-t-slate-900 rounded-full animate-spin"></div>
-          <p className="text-slate-600 mt-4">Loading products...</p>
+          <p className="text-slate-600 mt-4">Cargando Productos...</p>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
           <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">No products found</h3>
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">No se encontraron productos.</h3>
           <p className="text-slate-600 mb-6">
             {searchTerm || statusFilter !== 'all'
-              ? 'Try adjusting your filters'
-              : 'Get started by adding your first product'}
+              ? 'Ajustando tus filtros'
+              : 'Empieza a agregar productos'}
           </p>
           {!searchTerm && statusFilter === 'all' && (
             <button
@@ -211,7 +249,7 @@ export const ProductsSection = () => {
               className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
             >
               <Plus className="w-5 h-5" />
-              <span>Add Your First Product</span>
+              <span>Agrega tu primer producto</span>
             </button>
           )}
         </div>
@@ -233,19 +271,25 @@ export const ProductsSection = () => {
                     />
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Product
+                    Producto
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
                     Slug
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Price
+                    SKU
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                    Status
+                    Precio
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                    Stock
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                    Estado
                   </th>
                   <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900">
-                    Actions
+                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -290,9 +334,33 @@ export const ProductsSection = () => {
                       </code>
                     </td>
                     <td className="px-6 py-4">
+                      <span className="text-sm text-slate-900 font-medium">
+                        {product.sku ?? '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
                       <span className="font-semibold text-slate-900">
                         ${Number(product.price).toFixed(2)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {product.track_inventory ? (
+                        <span
+                          className={
+                            (() => {
+                              const stock = product.stock ?? 0;
+                              const threshold = product.low_stock_threshold ?? 0;
+                              if (stock === 0) return 'text-red-600 font-semibold';
+                              if (threshold > 0 && stock <= threshold) return 'text-yellow-600 font-semibold';
+                              return 'text-blue-600 font-semibold';
+                            })()
+                          }
+                        >
+                          {product.stock ?? 0}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <button
@@ -316,14 +384,14 @@ export const ProductsSection = () => {
                         <button
                           onClick={() => handleEdit(product)}
                           className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="Edit"
+                          title="Editar"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(product.id)}
                           className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
+                          title="Eliminar"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

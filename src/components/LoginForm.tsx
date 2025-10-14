@@ -32,7 +32,7 @@ export const LoginForm = () => {
               <Lock className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
-            <p className="text-slate-600 mt-2">Sign in to manage your products</p>
+            <p className="text-slate-600 mt-2">Iniciá Sesión para administrar tus productos</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -45,7 +45,7 @@ export const LoginForm = () => {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                Email Address
+                Correo Electrónico
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -63,7 +63,7 @@ export const LoginForm = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
-                Password
+                Contraseña
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -84,12 +84,12 @@ export const LoginForm = () => {
               disabled={loading}
               className="w-full bg-slate-900 text-white py-3 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
             </button>
           </form>
 
           <div className="mt-6 text-center text-sm text-slate-600">
-            <p>Use your admin credentials to access the dashboard</p>
+            <p>Usá las credenciales que te otorgaron para acceder al dashboard.</p>
           </div>
         </div>
       </div>
