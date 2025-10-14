@@ -160,39 +160,39 @@ export const ProductsSection = () => {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="flex justify-between items-center mb-8">
         <div>
           <h2 className="text-3xl font-bold text-slate-900">Productos</h2>
-          <p className="text-slate-600 mt-1">
+          <p className="mt-1 text-slate-600">
             Gestioná tu catálogo de productos ({filteredProducts.length} items)
           </p>
         </div>
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+          className="flex gap-2 items-center px-6 py-3 font-medium text-white rounded-lg transition-colors bg-slate-900 hover:bg-slate-800"
         >
           <Plus className="w-5 h-5" />
           <span>Agregar Producto</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+      <div className="p-6 mb-6 bg-white rounded-xl border shadow-sm border-slate-200">
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 w-5 h-5 transform -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Buscar productos por nombre, descripción, slug..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+              className="py-3 pr-4 pl-10 w-full rounded-lg border transition-all outline-none border-slate-300 focus:ring-2 focus:ring-slate-900 focus:border-transparent"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+            className="px-4 py-3 rounded-lg border transition-all outline-none border-slate-300 focus:ring-2 focus:ring-slate-900 focus:border-transparent"
           >
             <option value="all">Todos los estados</option>
             <option value="active">Sólo Activos</option>
@@ -202,7 +202,7 @@ export const ProductsSection = () => {
           <select
             value={slugFilter}
             onChange={(e) => setSlugFilter(e.target.value as any)}
-            className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+            className="px-4 py-3 rounded-lg border transition-all outline-none border-slate-300 focus:ring-2 focus:ring-slate-900 focus:border-transparent"
           >
             <option value="all">Todas las categorías (slug)</option>
             {Array.from(new Set(products.map((p) => p.slug))).map((slug) => (
@@ -214,13 +214,13 @@ export const ProductsSection = () => {
         </div>
 
         {selectedProducts.size > 0 && (
-          <div className="mt-4 flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-            <span className="text-sm text-slate-700 font-medium">
+          <div className="flex gap-4 items-center p-4 mt-4 rounded-lg bg-slate-50">
+            <span className="text-sm font-medium text-slate-700">
               {selectedProducts.size} seleccionados
             </span>
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg transition-colors hover:bg-red-700"
             >
               <Trash2 className="w-4 h-4" />
               <span>Borrar Seleccionados</span>
@@ -230,15 +230,15 @@ export const ProductsSection = () => {
       </div>
 
       {loading ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <div className="inline-block w-8 h-8 border-4 border-slate-300 border-t-slate-900 rounded-full animate-spin"></div>
-          <p className="text-slate-600 mt-4">Cargando Productos...</p>
+        <div className="p-12 text-center bg-white rounded-xl border shadow-sm border-slate-200">
+          <div className="inline-block w-8 h-8 rounded-full border-4 animate-spin border-slate-300 border-t-slate-900"></div>
+          <p className="mt-4 text-slate-600">Cargando Productos...</p>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">No se encontraron productos.</h3>
-          <p className="text-slate-600 mb-6">
+        <div className="p-12 text-center bg-white rounded-xl border shadow-sm border-slate-200">
+          <Package className="mx-auto mb-4 w-16 h-16 text-slate-300" />
+          <h3 className="mb-2 text-xl font-semibold text-slate-900">No se encontraron productos.</h3>
+          <p className="mb-6 text-slate-600">
             {searchTerm || statusFilter !== 'all'
               ? 'Ajustando tus filtros'
               : 'Empieza a agregar productos'}
@@ -246,7 +246,7 @@ export const ProductsSection = () => {
           {!searchTerm && statusFilter === 'all' && (
             <button
               onClick={handleCreate}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+              className="inline-flex gap-2 items-center px-6 py-3 font-medium text-white rounded-lg transition-colors bg-slate-900 hover:bg-slate-800"
             >
               <Plus className="w-5 h-5" />
               <span>Agrega tu primer producto</span>
@@ -256,10 +256,10 @@ export const ProductsSection = () => {
       ) : (
         <>
         {/* Desktop/tablet table */}
-        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="hidden overflow-hidden bg-white rounded-xl border shadow-sm md:block border-slate-200">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="border-b bg-slate-50 border-slate-200">
                 <tr>
                   <th className="px-6 py-4 text-left">
                     <input
@@ -272,25 +272,25 @@ export const ProductsSection = () => {
                       className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                  <th className="px-6 py-4 text-sm font-semibold text-left text-slate-900">
                     Producto
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 hidden md:table-cell">
+                  <th className="hidden px-6 py-4 text-sm font-semibold text-left text-slate-900 md:table-cell">
                     Slug
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 hidden sm:table-cell">
+                  <th className="hidden px-6 py-4 text-sm font-semibold text-left text-slate-900 sm:table-cell">
                     SKU
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                  <th className="px-6 py-4 text-sm font-semibold text-left text-slate-900">
                     Precio
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                  <th className="px-6 py-4 text-sm font-semibold text-left text-slate-900">
                     Stock
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                  <th className="px-6 py-4 text-sm font-semibold text-left text-slate-900">
                     Estado
                   </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900">
+                  <th className="px-6 py-4 text-sm font-semibold text-right text-slate-900">
                     Acciones
                   </th>
                 </tr>
@@ -299,7 +299,7 @@ export const ProductsSection = () => {
                 {filteredProducts.map((product) => (
                   <tr
                     key={product.id}
-                    className="hover:bg-slate-50 transition-colors"
+                    className="transition-colors hover:bg-slate-50"
                   >
                     <td className="px-6 py-4">
                       <input
@@ -310,15 +310,15 @@ export const ProductsSection = () => {
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
+                      <div className="flex gap-4 items-center">
                         {product.image_url ? (
                           <img
                             src={product.image_url}
                             alt={product.name}
-                            className="w-12 h-12 rounded-lg object-cover"
+                            className="object-cover w-12 h-12 rounded-lg"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-slate-200 flex items-center justify-center">
+                          <div className="flex justify-center items-center w-12 h-12 rounded-lg bg-slate-200">
                             <Package className="w-6 h-6 text-slate-400" />
                           </div>
                         )}
@@ -330,13 +330,13 @@ export const ProductsSection = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
-                      <code className="text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                    <td className="hidden px-6 py-4 md:table-cell">
+                      <code className="px-2 py-1 text-sm rounded text-slate-600 bg-slate-100">
                         {product.slug}
                       </code>
                     </td>
-                    <td className="px-6 py-4 hidden sm:table-cell">
-                      <span className="text-sm text-slate-900 font-medium">
+                    <td className="hidden px-6 py-4 sm:table-cell">
+                      <span className="text-sm font-medium text-slate-900">
                         {product.sku ?? '-'}
                       </span>
                     </td>
@@ -382,17 +382,17 @@ export const ProductsSection = () => {
                       </button>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex gap-2 justify-end items-center">
                         <button
                           onClick={() => handleEdit(product)}
-                          className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                          className="p-2 rounded-lg transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                           title="Editar"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(product.id)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-600 rounded-lg transition-colors hover:text-red-700 hover:bg-red-50"
                           title="Eliminar"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -407,20 +407,20 @@ export const ProductsSection = () => {
         </div>
 
         {/* Mobile cards */}
-        <div className="md:hidden space-y-3">
+        <div className="space-y-3 md:hidden">
           {filteredProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-              <div className="flex items-center gap-3">
+            <div key={product.id} className="p-4 bg-white rounded-xl border shadow-sm border-slate-200">
+              <div className="flex gap-3 items-center">
                 {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="w-14 h-14 rounded-lg object-cover" />
+                  <img src={product.image_url} alt={product.name} className="object-cover w-14 h-14 rounded-lg" />
                 ) : (
-                  <div className="w-14 h-14 rounded-lg bg-slate-200 flex items-center justify-center">
+                  <div className="flex justify-center items-center w-14 h-14 rounded-lg bg-slate-200">
                     <Package className="w-6 h-6 text-slate-400" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 truncate">{product.name}</p>
-                  <p className="text-xs text-slate-600 truncate">{product.description}</p>
+                  <p className="font-semibold truncate text-slate-900">{product.name}</p>
+                  <p className="text-xs truncate text-slate-600">{product.description}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -430,7 +430,7 @@ export const ProductsSection = () => {
                 />
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
                 <div>
                   <div className="text-slate-500">Precio</div>
                   <div className="font-semibold text-slate-900">${Number(product.price).toFixed(2)}</div>
@@ -468,16 +468,16 @@ export const ProductsSection = () => {
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center justify-end gap-2">
+              <div className="flex gap-2 justify-end items-center mt-3">
                 <button
                   onClick={() => handleEdit(product)}
-                  className="px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors text-sm"
+                  className="px-3 py-2 text-sm rounded-lg transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => handleDelete(product.id)}
-                  className="px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors text-sm"
+                  className="px-3 py-2 text-sm text-red-600 rounded-lg transition-colors hover:text-red-700 hover:bg-red-50"
                 >
                   Eliminar
                 </button>

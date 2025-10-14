@@ -16,9 +16,9 @@ export function TopBar() {
   }, [now]);
 
   return (
-    <div className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-        <div className="text-slate-900 font-semibold">{formatted}</div>
+    <div className="z-30 border-b border-indigo-200 backdrop-blur bg-white/70">
+      <div className="flex justify-between items-center px-6 py-3 mx-auto max-w-7xl">
+        <div className="font-semibold text-slate-900">{formatted}</div>
         <WeatherWidget />
       </div>
     </div>

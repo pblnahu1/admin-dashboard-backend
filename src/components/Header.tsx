@@ -1,37 +1,71 @@
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, ShieldCheck, Menu } from 'lucide-react';
 
-export const Header = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
+type Section = 'products' | 'profile';
+
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+  activeSection: Section;
+  onChangeSection: (s: Section) => void;
+}
+
+export const Header = ({ onToggleSidebar, activeSection, onChangeSection }: HeaderProps) => {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-      <div className="px-4 md:px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-10 bg-white border-b border-slate-200">
+      <div className="flex justify-between items-center px-4 py-4 md:px-8">
+        <div className="flex gap-3 items-center">
           <button
             onClick={onToggleSidebar}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="p-2 rounded-lg md:hidden hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900"
             aria-label="Abrir menú"
           >
             <Menu className="w-6 h-6 text-slate-700" />
           </button>
-          <div className="bg-slate-900 p-2 rounded-lg">
+          <div className="p-2 rounded-lg bg-slate-900">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg md:text-xl font-bold text-slate-900">Admin Dashboard</h1>
-            <p className="hidden sm:block text-sm text-slate-600">Sistema de Administración de Productos</p>
+            <h1 className="text-lg font-bold md:text-xl text-slate-900">ProAdmin</h1>
+            <p className="hidden text-sm sm:block text-slate-600">Sistema de Administración de Inventario</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="hidden sm:block text-right">
+        {/* Desktop top-centered nav (buttons) */}
+        <div className="hidden justify-center items-center bg-white border-b md:flex border-slate-200">
+          <nav className="flex gap-3 items-center py-3">
+            <button
+              onClick={() => onChangeSection('products')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                activeSection === 'products'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              Productos
+            </button>
+            <button
+              onClick={() => onChangeSection('profile')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                activeSection === 'profile'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              Perfil
+            </button>
+          </nav>
+        </div>
+
+        <div className="flex gap-3 items-center md:gap-4">
+          <div className="hidden text-right sm:block">
             <p className="text-sm font-medium text-slate-900">{user?.email}</p>
             <p className="text-xs text-slate-600">Administrador</p>
           </div>
           <button
             onClick={signOut}
-            className="flex items-center gap-2 px-3 md:px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="flex gap-2 items-center px-3 py-2 text-white rounded-lg transition-colors md:px-4 bg-slate-900 hover:bg-slate-800"
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Cerrar Sesión</span>
