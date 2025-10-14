@@ -254,7 +254,9 @@ export const ProductsSection = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <>
+        {/* Desktop/tablet table */}
+        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -273,10 +275,10 @@ export const ProductsSection = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
                     Producto
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 hidden md:table-cell">
                     Slug
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 hidden sm:table-cell">
                     SKU
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
@@ -328,12 +330,12 @@ export const ProductsSection = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden md:table-cell">
                       <code className="text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
                         {product.slug}
                       </code>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden sm:table-cell">
                       <span className="text-sm text-slate-900 font-medium">
                         {product.sku ?? '-'}
                       </span>
@@ -403,6 +405,87 @@ export const ProductsSection = () => {
             </table>
           </div>
         </div>
+
+        {/* Mobile cards */}
+        <div className="md:hidden space-y-3">
+          {filteredProducts.map((product) => (
+            <div key={product.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <div className="flex items-center gap-3">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="w-14 h-14 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-14 h-14 rounded-lg bg-slate-200 flex items-center justify-center">
+                    <Package className="w-6 h-6 text-slate-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 truncate">{product.name}</p>
+                  <p className="text-xs text-slate-600 truncate">{product.description}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={selectedProducts.has(product.id)}
+                  onChange={() => toggleSelectProduct(product.id)}
+                  className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                />
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <div className="text-slate-500">Precio</div>
+                  <div className="font-semibold text-slate-900">${Number(product.price).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500">Stock</div>
+                  <div className={(() => {
+                    const stock = product.track_inventory ? (product.stock ?? 0) : null;
+                    const threshold = product.low_stock_threshold ?? 0;
+                    if (stock === null) return 'text-slate-500';
+                    if (stock === 0) return 'text-red-600 font-semibold';
+                    if (threshold > 0 && stock <= threshold) return 'text-yellow-600 font-semibold';
+                    return 'text-blue-600 font-semibold';
+                  })()}>
+                    {product.track_inventory ? (product.stock ?? 0) : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-slate-500">SKU</div>
+                  <div className="text-slate-900">{product.sku ?? '-'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500">Estado</div>
+                  <div>
+                    <button
+                      onClick={() => handleToggleActive(product)}
+                      className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        product.is_active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
+                      }`}
+                    >
+                      {product.is_active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                      {product.is_active ? 'Activo' : 'Inactivo'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <button
+                  onClick={() => handleEdit(product)}
+                  className="px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors text-sm"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDelete(product.id)}
+                  className="px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors text-sm"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       )}
 
       {isModalOpen && (

@@ -155,9 +155,9 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-0 md:p-4 z-50">
+      <div className="bg-white w-full h-full md:h-auto md:rounded-2xl shadow-2xl md:max-w-2xl md:max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-slate-200 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-slate-900">
             {product ? 'Editar Producto' : 'Crear Nuevo Producto'}
           </h2>
@@ -169,7 +169,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -247,7 +247,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
                 <img
                   src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
                   alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg border border-slate-200"
+                  className="w-28 h-28 md:w-32 md:h-32 object-cover rounded-lg border border-slate-200"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
@@ -350,25 +350,25 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
             </label>
           </div>
 
-          <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-5 h-5" />
-              <span>{loading ? 'Guardando...' : product ? 'Actualizar' : 'Crear'}</span>
-            </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-slate-200">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 md:px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="w-5 h-5" />
+            <span>{loading ? 'Guardando...' : product ? 'Actualizar' : 'Crear'}</span>
+          </button>
           </div>
         </form>
       </div>
     </div>
   );
-};
+}

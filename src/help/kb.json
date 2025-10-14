@@ -1,0 +1,27 @@
+[
+  {
+    "id": "products-ownership",
+    "title": "Productos por usuario",
+    "content": "Cada usuario ve y gestiona sólo sus productos. Esto se logra con la columna user_id y políticas RLS en la tabla products."
+  },
+  {
+    "id": "image-upload",
+    "title": "Subir imágenes de productos",
+    "content": "Usá el campo de imagen para seleccionar un archivo local. La app lo sube al bucket product-images en Supabase Storage y guarda la URL pública en image_url."
+  },
+  {
+    "id": "inventory",
+    "title": "Inventario, SKU y umbral",
+    "content": "Activá 'Controlar inventario' para mostrar stock en la tabla. SKU es un identificador interno. El umbral (low_stock_threshold) define cuándo hay poco stock. Colores: rojo=0, amarillo=<=umbral, azul=>umbral."
+  },
+  {
+    "id": "filters",
+    "title": "Filtros (búsqueda, estado y slug)",
+    "content": "Podés filtrar por texto, estado (activo/inactivo) y por slug (categoría) desde la barra superior de la lista de productos."
+  },
+  {
+    "id": "deploy",
+    "title": "Despliegue en Vercel",
+    "content": "Seteá VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en Vercel. Configurá Auth URLs en Supabase. La DB/Auth/Storage siguen viviendo en Supabase."
+  }
+]
