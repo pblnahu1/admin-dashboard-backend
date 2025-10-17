@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase, Product } from '../lib/supabase';
-import { X, Save, AlertCircle, Upload, Loader2 } from 'lucide-react';
+import { X, Save, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { uploadProductImage, deleteProductImage } from '../services/imageService';
 
 interface ProductModalProps {
   product: Product | null;
@@ -12,12 +11,7 @@ interface ProductModalProps {
 export const ProductModal = ({ product, onClose }: ProductModalProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -30,6 +24,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
     track_inventory: false,
     low_stock_threshold: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -65,35 +60,6 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      // Validar tipo de archivo
-      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-      if (!validTypes.includes(file.type)) {
-        setError('Formato de archivo no soportado. Usa JPG, PNG o WebP.');
-        return;
-      }
-      
-      // Validar tamaño (máx 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        setError('La imagen es demasiado grande. El tamaño máximo es 10MB.');
-        return;
-      }
-      
-      setError('');
-      setImageFile(file);
-    }
-  };
-  
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -107,7 +73,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
 
     const price = parseFloat(formData.price);
     if (isNaN(price) || price < 0) {
-      setError('Por favor ingrese un precio válido');
+      setError('Please enter a valid price');
       setLoading(false);
       return;
     }
@@ -128,42 +94,26 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
     }
 
     let uploadedImageUrl: string | null = product?.image_url || null;
-    let uploadedImagePath: string | null = null;
 
     // Upload new image if a file has been selected
     if (imageFile) {
-      try {
-        setUploading(true);
-        setUploadProgress(0);
-        
-        const result = await uploadProductImage({
-          userId: user.id,
-          productId: product?.id || 'new',
-          file: imageFile,
-          onProgress: (progress) => setUploadProgress(progress)
-        });
-        
-        uploadedImageUrl = result.url;
-        uploadedImagePath = result.path;
-        
-        // Si hay una imagen anterior y es diferente a la nueva, eliminarla
-        if (product?.image_url && product.image_url !== uploadedImageUrl) {
-          try {
-            const oldPath = product.image_url.split('/').slice(-2).join('/');
-            await deleteProductImage(oldPath);
-          } catch (error) {
-            console.warn('No se pudo eliminar la imagen anterior:', error);
-          }
-        }
-      } catch (error) {
-        console.error('Error al subir la imagen:', error);
-        setError('Error al subir la imagen. Por favor, inténtalo de nuevo.');
+      const bucket = 'product-images';
+      const ext = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const safeSlug = (formData.slug || formData.name).toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      const filePath = `${user.id}/${safeSlug}-${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, imageFile, { upsert: false, contentType: imageFile.type });
+
+      if (uploadError) {
+        setError(`Error subiendo la imagen: ${uploadError.message}`);
         setLoading(false);
-        setUploading(false);
         return;
-      } finally {
-        setUploading(false);
       }
+
+      const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(filePath);
+      uploadedImageUrl = publicData.publicUrl || null;
     }
 
     const productData = {
@@ -180,33 +130,28 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
       ...(product ? {} : { created_by: user?.id, user_id: user?.id }),
     };
 
-    try {
-      let result;
-      if (product) {
-        result = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', product.id)
-          .eq('user_id', user?.id || '');
-      } else {
-        result = await supabase.from('products').insert([productData]);
-      }
-
-      if (result.error) {
-        if (result.error.message.includes('duplicate key')) {
-          throw new Error('Ya existe un producto con este slug');
-        } else {
-          throw result.error;
-        }
-      }
-
-      onClose();
-    } catch (error: any) {
-      console.error('Error al guardar el producto:', error);
-      setError(error.message || 'Error al guardar el producto. Por favor, inténtalo de nuevo.');
-    } finally {
-      setLoading(false);
+    let result;
+    if (product) {
+      result = await supabase
+        .from('products')
+        .update(productData)
+        .eq('id', product.id)
+        .eq('user_id', user?.id || '');
+    } else {
+      result = await supabase.from('products').insert([productData]);
     }
+
+    if (result.error) {
+      if (result.error.message.includes('duplicate key')) {
+        setError('A product with this slug already exists');
+      } else {
+        setError(result.error.message);
+      }
+      setLoading(false);
+      return;
+    }
+
+    onClose();
   };
 
   return (
@@ -219,7 +164,6 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
           <button
             onClick={onClose}
             className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            disabled={loading || uploading}
           >
             <X className="w-6 h-6 text-slate-600" />
           </button>
@@ -244,7 +188,6 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
               placeholder="Ingresá el nombre de tu producto"
               required
-              disabled={loading || uploading}
             />
           </div>
 
@@ -261,12 +204,11 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none font-mono text-sm"
               placeholder="product-slug"
               pattern="[a-z0-9-]+"
-              title="Solo letras minúsculas, números y guiones"
+              title="Only lowercase letters, numbers, and hyphens"
               required
-              disabled={loading || uploading}
             />
             <p className="text-xs text-slate-600 mt-1">
-              Identificador para URL (solo minúsculas, números y guiones)
+              URL-friendly identifier (lowercase, hyphens only)
             </p>
           </div>
 
@@ -282,73 +224,34 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none resize-none"
               placeholder="Ingresá la descripción de tu producto"
               rows={4}
-              disabled={loading || uploading}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Imagen
-              {uploading && (
-                <span className="ml-2 text-xs text-blue-600">
-                  Subiendo... {Math.round(uploadProgress)}%
-                </span>
-              )}
             </label>
-            
-            <div className="flex items-center gap-3">
-              <label className="flex-1 cursor-pointer">
-                <div className="w-full px-4 py-3 border-2 border-dashed border-slate-300 rounded-lg hover:border-slate-400 transition-colors flex items-center justify-center gap-2">
-                  <Upload className="w-5 h-5 text-slate-500" />
-                  <span className="text-sm text-slate-600">
-                    {imageFile || formData.image_url ? 'Cambiar imagen' : 'Seleccionar imagen'}
-                  </span>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  id="img-product"
-                  name="imgproduct"
-                  accept="image/jpeg, image/png, image/webp, image/gif"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={loading || uploading}
-                />
-              </label>
-              
-              {(imageFile || formData.image_url) && !uploading && (
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  disabled={loading}
-                >
-                  Eliminar
-                </button>
-              )}
-            </div>
-            
-            <p className="mt-1 text-xs text-slate-500">
-              Formatos soportados: JPG, PNG, WebP. Tamaño máximo: 10MB
-            </p>
-            
+            <input
+              type="file"
+              id="img-product" 
+              name="imgproduct"
+              accept='image/*'
+              onChange={(e) => {
+                const file = e.target.files && e.target.files[0];
+                setImageFile(file || null);
+              }}
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
+            />
             {(imageFile || formData.image_url) && (
-              <div className="mt-3 relative">
+              <div className="mt-3">
                 <img
                   src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
-                  alt="Vista previa"
-                  className="w-full max-w-xs h-auto max-h-48 object-contain rounded-lg border border-slate-200"
+                  alt="Preview"
+                  className="w-28 h-28 md:w-32 md:h-32 object-cover rounded-lg border border-slate-200"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-                {uploading && (
-                  <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
-                    <div className="bg-white p-3 rounded-full shadow-lg">
-                      <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -372,7 +275,6 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
                 className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
                 placeholder="0.00"
                 required
-                disabled={loading || uploading}
               />
             </div>
           </div>
@@ -388,7 +290,6 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
                 onChange={(e) => setFormData((prev) => ({ ...prev, sku: e.target.value }))}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
                 placeholder="SKU-12345"
-                disabled={loading || uploading}
               />
             </div>
             <div>
@@ -398,121 +299,76 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
               <input
                 type="number"
                 min="0"
-                step="1"
                 value={formData.stock}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    stock: e.target.value,
-                  }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, stock: e.target.value }))}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
-                placeholder="Cantidad en stock"
-                disabled={!formData.track_inventory || loading || uploading}
+                placeholder="0"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
               <input
                 type="checkbox"
                 id="track_inventory"
                 checked={formData.track_inventory}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    track_inventory: e.target.checked,
-                  }))
-                }
-                className="h-4 w-4 text-slate-900 focus:ring-slate-900 border-slate-300 rounded"
-                disabled={loading || uploading}
+                onChange={(e) => setFormData((prev) => ({ ...prev, track_inventory: e.target.checked }))}
+                className="w-5 h-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
               />
-              <label
-                htmlFor="track_inventory"
-                className="ml-2 block text-sm text-slate-700"
-              >
-                Controlar inventario
+              <label htmlFor="track_inventory" className="text-sm font-medium text-slate-700">
+                Controlar inventario (stock)
               </label>
             </div>
-
             <div>
-              <label
-                htmlFor="low_stock_threshold"
-                className="block text-sm font-medium text-slate-700 mb-2"
-              >
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Umbral de stock bajo
               </label>
               <input
                 type="number"
                 min="0"
-                step="1"
-                id="low_stock_threshold"
                 value={formData.low_stock_threshold}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    low_stock_threshold: e.target.value,
-                  }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, low_stock_threshold: e.target.value }))}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
-                placeholder="Alerta cuando el stock sea menor a..."
-                disabled={!formData.track_inventory || loading || uploading}
+                placeholder="0"
               />
             </div>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
               id="is_active"
               checked={formData.is_active}
               onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  is_active: e.target.checked,
-                }))
+                setFormData((prev) => ({ ...prev, is_active: e.target.checked }))
               }
-              className="h-4 w-4 text-slate-900 focus:ring-slate-900 border-slate-300 rounded"
-              disabled={loading || uploading}
+              className="w-5 h-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
             />
-            <label
-              htmlFor="is_active"
-              className="ml-2 block text-sm text-slate-700"
-            >
-              Producto activo (visible en la tienda)
+            <label htmlFor="is_active" className="text-sm font-medium text-slate-700">
+              El producto está visible y activo
             </label>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors"
-              disabled={loading || uploading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-              disabled={loading || uploading}
-            >
-              {loading || uploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {uploading ? 'Subiendo imagen...' : 'Guardando...'}
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  {product ? 'Guardar cambios' : 'Crear producto'}
-                </>
-              )}
-            </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-slate-200">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 md:px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="w-5 h-5" />
+            <span>{loading ? 'Guardando...' : product ? 'Actualizar' : 'Crear'}</span>
+          </button>
           </div>
         </form>
       </div>
     </div>
   );
-};
+}
