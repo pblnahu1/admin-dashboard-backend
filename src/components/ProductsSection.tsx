@@ -3,6 +3,7 @@ import { supabase, Product } from '../lib/supabase';
 import { Plus, Search, Edit2, Trash2, Eye, EyeOff, Package } from 'lucide-react';
 import { ProductModal } from './ProductModal';
 import { useAuth } from '../contexts/AuthContext';
+import {ProductExportImport} from "./ProductExportImport";
 
 export const ProductsSection = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -158,6 +159,32 @@ export const ProductsSection = () => {
     }
   };
 
+  const handleImportProducts = async (importedProducts: Product[]) => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .upsert(
+          importedProducts.map(p => ({
+            ...p,
+            user_id: user.id,
+            is_active: p.is_active ?? true,
+            created_at: p.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })),
+          { onConflict: 'slug' }
+        )
+        .select();
+
+      if (!error && data) {
+        fetchProducts();
+      }
+    } catch (error) {
+      console.error('Error al importar productos:', error);
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -175,6 +202,11 @@ export const ProductsSection = () => {
           <span>Agregar Producto</span>
         </button>
       </div>
+
+      <ProductExportImport 
+        products={products} 
+        onImport={handleImportProducts} 
+      />
 
       <div className="p-6 mb-6 bg-white rounded-xl border shadow-sm border-slate-200">
         <div className="flex flex-col gap-4 md:flex-row">
