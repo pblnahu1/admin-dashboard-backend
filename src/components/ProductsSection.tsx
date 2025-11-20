@@ -15,6 +15,12 @@ export const ProductsSection = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [importStatus, setImportStatus] = useState<'idle' | 'importing' | 'completed' | 'error'>('idle');
+  const [importProgress, setImportProgress] = useState<{ total: number; processed: number; errors: string[] }>({
+    total: 0,
+    processed: 0,
+    errors: [],
+  });
   const { user } = useAuth();
 
   useEffect(() => {
@@ -161,27 +167,58 @@ export const ProductsSection = () => {
 
   const handleImportProducts = async (importedProducts: Product[]) => {
     if (!user?.id) return;
+    if (!importedProducts.length) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .upsert(
-          importedProducts.map(p => ({
-            ...p,
-            user_id: user.id,
-            is_active: p.is_active ?? true,
-            created_at: p.created_at || new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })),
-          { onConflict: 'slug' }
-        )
-        .select();
+    const chunkSize = 100;
+    const total = importedProducts.length;
+    setImportStatus('importing');
+    setImportProgress({ total, processed: 0, errors: [] });
 
-      if (!error && data) {
-        fetchProducts();
+    const errors: string[] = [];
+
+    const chunks: Product[][] = [];
+    for (let i = 0; i < total; i += chunkSize) {
+      chunks.push(importedProducts.slice(i, i + chunkSize));
+    }
+
+    for (let index = 0; index < chunks.length; index++) {
+      const chunk = chunks[index];
+      try {
+        const { error } = await supabase
+          .from('products')
+          .upsert(
+            chunk.map((p) => ({
+              ...p,
+              user_id: user.id,
+              is_active: p.is_active ?? true,
+              created_at: p.created_at || new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })),
+            { onConflict: 'slug' }
+          );
+
+        if (error) {
+          console.error('Error en batch de importación:', error);
+          errors.push(`Error en batch ${index + 1}: ${error.message || 'Error desconocido'}`);
+        }
+      } catch (err: any) {
+        console.error('Error al importar productos:', err);
+        errors.push(`Error en batch ${index + 1}: ${err.message || 'Error desconocido'}`);
       }
-    } catch (error) {
-      console.error('Error al importar productos:', error);
+
+      setImportProgress((prev) => ({
+        ...prev,
+        processed: Math.min(prev.processed + chunk.length, total),
+        errors,
+      }));
+    }
+
+    await fetchProducts();
+
+    if (errors.length > 0) {
+      setImportStatus('error');
+    } else {
+      setImportStatus('completed');
     }
   };
 
@@ -207,6 +244,58 @@ export const ProductsSection = () => {
         products={products} 
         onImport={handleImportProducts} 
       />
+
+      {importStatus !== 'idle' && (
+        <div className="p-3 mb-4 text-xs bg-white rounded border border-slate-200 shadow-sm">
+          <div className="flex justify-between mb-1">
+            <span className="font-semibold text-slate-800">
+              Estado de importación
+            </span>
+            <span className="text-slate-500">
+              {importProgress.processed} / {importProgress.total} productos procesados
+            </span>
+          </div>
+          <div className="w-full h-2 mb-2 overflow-hidden bg-slate-100 rounded-full">
+            <div
+              className={`h-2 rounded-full ${
+                importStatus === 'error'
+                  ? 'bg-red-500'
+                  : importStatus === 'completed'
+                  ? 'bg-emerald-500'
+                  : 'bg-slate-900'
+              }`}
+              style={{
+                width:
+                  importProgress.total > 0
+                    ? `${Math.round((importProgress.processed / importProgress.total) * 100)}%`
+                    : '0%',
+              }}
+            />
+          </div>
+          {importStatus === 'importing' && (
+            <p className="text-slate-600">
+              Importando en lotes para respetar los límites de Supabase...
+            </p>
+          )}
+          {importStatus === 'completed' && importProgress.errors.length === 0 && (
+            <p className="text-emerald-700">
+              Importación completada sin errores.
+            </p>
+          )}
+          {importProgress.errors.length > 0 && (
+            <div className="mt-1">
+              <p className="mb-1 font-semibold text-red-700">Batches con errores</p>
+              <ul className="space-y-0.5 max-h-24 overflow-auto">
+                {importProgress.errors.map((err, idx) => (
+                  <li key={idx} className="text-red-700">
+                    {err}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="p-6 mb-6 bg-white rounded-xl border shadow-sm border-slate-200">
         <div className="flex flex-col gap-4 md:flex-row">
