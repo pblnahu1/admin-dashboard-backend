@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase, Product } from '../lib/supabase';
+import { supabase, Product } from '../../lib/supabase';
 import { X, Save, AlertCircle, Upload, Loader2 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { uploadProductImage, deleteProductImage } from '../services/imageService';
+import { useAuth } from '../../contexts/AuthContext';
+import { uploadProductImage, deleteProductImage } from '../../services/imageService';
 
 interface ProductModalProps {
   product: Product | null;
@@ -74,19 +74,19 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
         setError('Formato de archivo no soportado. Usa JPG, PNG o WebP.');
         return;
       }
-      
+
       // Validar tamaño (máx 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
         setError('La imagen es demasiado grande. El tamaño máximo es 10MB.');
         return;
       }
-      
+
       setError('');
       setImageFile(file);
     }
   };
-  
+
   const handleRemoveImage = () => {
     setImageFile(null);
     if (fileInputRef.current) {
@@ -135,17 +135,17 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
       try {
         setUploading(true);
         setUploadProgress(0);
-        
+
         const result = await uploadProductImage({
           userId: user.id,
           productId: product?.id || 'new',
           file: imageFile,
           onProgress: (progress) => setUploadProgress(progress)
         });
-        
+
         uploadedImageUrl = result.url;
         uploadedImagePath = result.path;
-        
+
         // Si hay una imagen anterior y es diferente a la nueva, eliminarla
         if (product?.image_url && product.image_url !== uploadedImageUrl) {
           try {
@@ -295,7 +295,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
                 </span>
               )}
             </label>
-            
+
             <div className="flex items-center gap-3">
               <label className="flex-1 cursor-pointer">
                 <div className="w-full px-4 py-3 border-2 border-dashed border-slate-300 rounded-lg hover:border-slate-400 transition-colors flex items-center justify-center gap-2">
@@ -315,7 +315,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
                   disabled={loading || uploading}
                 />
               </label>
-              
+
               {(imageFile || formData.image_url) && !uploading && (
                 <button
                   type="button"
@@ -327,11 +327,11 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
                 </button>
               )}
             </div>
-            
+
             <p className="mt-1 text-xs text-slate-500">
               Formatos soportados: JPG, PNG, WebP. Tamaño máximo: 10MB
             </p>
-            
+
             {(imageFile || formData.image_url) && (
               <div className="mt-3 relative">
                 <img

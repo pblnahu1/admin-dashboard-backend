@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { LogOut, ShieldCheck, Menu } from 'lucide-react';
 
 type Section = 'products' | 'profile';
@@ -37,21 +37,19 @@ export const Header = ({ onToggleSidebar, activeSection, onChangeSection }: Head
           <nav className="flex gap-3 items-center py-3">
             <button
               onClick={() => onChangeSection('products')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                activeSection === 'products'
+              className={`px-4 py-2 rounded-lg transition-colors ${activeSection === 'products'
                   ? 'bg-slate-900 text-white'
                   : 'text-slate-700 hover:bg-slate-100'
-              }`}
+                }`}
             >
               Productos
             </button>
             <button
               onClick={() => onChangeSection('profile')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                activeSection === 'profile'
+              className={`px-4 py-2 rounded-lg transition-colors ${activeSection === 'profile'
                   ? 'bg-slate-900 text-white'
                   : 'text-slate-700 hover:bg-slate-100'
-              }`}
+                }`}
             >
               Perfil
             </button>

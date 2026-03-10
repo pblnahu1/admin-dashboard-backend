@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ProductsSection } from './ProductsSection';
-import { ProfileSection } from './ProfileSection';
+import { ProductsSection } from '../products/ProductsSection';
+import { ProfileSection } from '../auth/ProfileSection';
 import { Header } from './Header';
 import { Package, User } from 'lucide-react';
 import { TopBar } from './TopBar';
 import { Footer } from './Footer';
-import { Chatbot } from './Chatbot';
+import { FAQWidget } from '../chat/FAQWidget';
 
 type Section = 'products' | 'profile';
 
@@ -20,9 +20,9 @@ export const Dashboard = () => {
         activeSection={activeSection}
         onChangeSection={setActiveSection}
       />
-      
 
-      
+
+
 
       <TopBar />
 
@@ -41,11 +41,10 @@ export const Dashboard = () => {
                     setActiveSection('products');
                     setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeSection === 'products'
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-700 hover:bg-slate-100'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeSection === 'products'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:bg-slate-100'
+                    }`}
                 >
                   <Package className="w-5 h-5" />
                   <span className="font-medium">Productos</span>
@@ -55,11 +54,10 @@ export const Dashboard = () => {
                     setActiveSection('profile');
                     setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeSection === 'profile'
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-700 hover:bg-slate-100'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeSection === 'profile'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:bg-slate-100'
+                    }`}
                 >
                   <User className="w-5 h-5" />
                   <span className="font-medium">Perfil</span>
@@ -76,9 +74,9 @@ export const Dashboard = () => {
           {activeSection === 'profile' && <ProfileSection />}
         </main>
       </div>
-      <Chatbot />
+      <FAQWidget />
       <Footer />
     </div>
   );
 }
-;
+  ;

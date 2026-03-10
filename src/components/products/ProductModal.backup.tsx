@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase, Product } from '../lib/supabase';
+import { supabase, Product } from '../../lib/supabase';
 import { X, Save, AlertCircle } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ProductModalProps {
   product: Product | null;
@@ -233,7 +233,7 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
             </label>
             <input
               type="file"
-              id="img-product" 
+              id="img-product"
               name="imgproduct"
               accept='image/*'
               onChange={(e) => {
@@ -351,21 +351,21 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-slate-200">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 md:px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="w-5 h-5" />
-            <span>{loading ? 'Guardando...' : product ? 'Actualizar' : 'Crear'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 md:px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="w-5 h-5" />
+              <span>{loading ? 'Guardando...' : product ? 'Actualizar' : 'Crear'}</span>
+            </button>
           </div>
         </form>
       </div>

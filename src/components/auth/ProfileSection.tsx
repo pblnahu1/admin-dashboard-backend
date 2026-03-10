@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { User, Mail, Calendar, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 
 export const ProfileSection = () => {
@@ -46,11 +46,10 @@ export const ProfileSection = () => {
 
       {message && (
         <div
-          className={`mb-6 px-4 py-3 rounded-lg flex items-center gap-2 ${
-            message.type === 'success'
+          className={`mb-6 px-4 py-3 rounded-lg flex items-center gap-2 ${message.type === 'success'
               ? 'bg-green-50 border border-green-200 text-green-700'
               : 'bg-red-50 border border-red-200 text-red-700'
-          }`}
+            }`}
         >
           {message.type === 'success' ? (
             <CheckCircle className="w-5 h-5 flex-shrink-0" />

@@ -1,10 +1,10 @@
 // import { useState } from 'react';
-import { Button } from './ui/Button';
+import { Button } from '../ui/Button';
 import { Download, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Product } from '../lib/supabase';
+import { Product } from '../../lib/supabase';
 
 interface ProductExportImportProps {
   products: Product[];
@@ -83,7 +83,7 @@ export const ProductExportImport = ({ products }: ProductExportImportProps) => {
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     headerRow.style.backgroundColor = '#f8f9fa';
-  
+
     // Asegurarse de que hay productos
     if (products.length === 0) {
       alert('No hay productos para exportar');
@@ -102,7 +102,7 @@ export const ProductExportImport = ({ products }: ProductExportImportProps) => {
       th.textContent = columnTitles[column as keyof typeof columnTitles] || column;
       headerRow.appendChild(th);
     });
-  
+
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
@@ -111,22 +111,22 @@ export const ProductExportImport = ({ products }: ProductExportImportProps) => {
     products.forEach((product, index) => {
       const row = document.createElement('tr');
       row.style.backgroundColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
-    
+
       columns.forEach(column => {
         const td = document.createElement('td');
         td.style.border = '1px solid #dee2e6';
         td.style.padding = '8px';
         td.style.wordBreak = 'break-word';
         td.style.verticalAlign = 'top';
-      
+
         // @ts-expect-error - Acceso dinámico a las propiedades
         let value = product[column];
-      
+
         // Formatear valores específicos
         if (column === 'price' && value !== null && value !== undefined) {
           value = `$${parseFloat(value).toFixed(2)}`;
         }
-      
+
         td.textContent = value !== null && value !== undefined ? String(value) : 'N/A';
         row.appendChild(td);
       });
@@ -147,20 +147,20 @@ export const ProductExportImport = ({ products }: ProductExportImportProps) => {
       const doc = new jsPDF('l', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-    
+
       // Ajustar el tamaño del contenedor para que sea más grande
       container.style.width = '1200px';
       container.style.padding = '30px';
-    
+
       // Aumentar el tamaño de la fuente
       const allTextElements = container.querySelectorAll('*');
       allTextElements.forEach(el => {
-        if (el.style) {
+        if (el instanceof HTMLElement) {
           const currentSize = parseInt(el.style.fontSize || '12', 10);
           el.style.fontSize = `${currentSize * 1.5}px`;
         }
       });
-    
+
       // Convertir el contenido a imagen con mayor resolución
       const canvas = await html2canvas(container, {
         scale: 3, // Aumentar la escala para mejor calidad
@@ -169,21 +169,21 @@ export const ProductExportImport = ({ products }: ProductExportImportProps) => {
         backgroundColor: '#ffffff',
         windowWidth: 1200 // Ancho de la ventana para el renderizado
       });
-    
+
       // Ajustar la imagen al ancho de la página manteniendo la relación de aspecto
       const imgData = canvas.toDataURL('image/png', 1.0);
       let imgWidth = pageWidth - 20; // margen de 10mm a cada lado
       let imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
+
       // Si la altura es mayor que la página, ajustar al alto de la página
       if (imgHeight > pageHeight - 20) {
         imgHeight = pageHeight - 20;
         imgWidth = (canvas.width * imgHeight) / canvas.height;
       }
-    
+
       // Agregar la imagen al PDF
       doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-    
+
       // Guardar el PDF
       doc.save(`productos_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {

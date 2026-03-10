@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { ProductsSection } from '../../components/ProductsSection';
+import { ProductsSection } from '../../components/products/ProductsSection';
 import { AuthProvider } from '../../contexts/AuthContext';
 import { createClient } from '@supabase/supabase-js';
 

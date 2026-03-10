@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { WeatherWidget } from './WeatherWidget';
+import { WeatherWidget } from '../chat/WeatherWidget';
 
 export function TopBar() {
   const [now, setNow] = useState<Date>(new Date());
