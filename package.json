@@ -16,7 +16,9 @@
     "typecheck": "bunx tsc --noEmit -p tsconfig.app.json",
     "test": "bunx jest",
     "test:watch": "bunx jest --watch",
-    "test:coverage": "bunx jest --coverage"
+    "test:coverage": "bunx jest --coverage",
+    "docker:build": "docker build -t vite-react-typescript-starter .",
+    "docker:run": "docker run --rm -p 80:80 vite-react-typescript-starter"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

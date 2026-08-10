@@ -51,6 +51,28 @@ bun run build
 bun run preview
 ```
 
+App en `http://localhost:5173/`.
+
+## Docker
+
+Construir la imagen:
+
+```bash
+docker build -t admin-dashboard-backend .
+```
+
+Ejecutar la imagen:
+
+```bash
+docker run --rm -p 80:80 admin-dashboard-backend
+```
+
+Luego abre `http://localhost`.
+
+## CI/CD
+
+Este repositorio incluye un workflow de GitHub Actions en `.github/workflows/ci.yml` que instala dependencias con Bun, ejecuta lint, typecheck, tests y build.
+
 ## Funcionamiento de inventario
 
 - `SKU`: identificador interno de producto (texto libre).
