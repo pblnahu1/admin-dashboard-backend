@@ -128,7 +128,6 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
     }
 
     let uploadedImageUrl: string | null = product?.image_url || null;
-    let uploadedImagePath: string | null = null;
 
     // Upload new image if a file has been selected
     if (imageFile) {
@@ -144,7 +143,6 @@ export const ProductModal = ({ product, onClose }: ProductModalProps) => {
         });
 
         uploadedImageUrl = result.url;
-        uploadedImagePath = result.path;
 
         // Si hay una imagen anterior y es diferente a la nueva, eliminarla
         if (product?.image_url && product.image_url !== uploadedImageUrl) {

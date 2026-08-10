@@ -18,7 +18,7 @@ Un panel de administración en React (Vite + TypeScript) integrado con Supabase 
 
 ## Requisitos
 
-- Node 18+ y PNPM (o NPM/Yarn)
+- Node 18+ y Bun
 - Proyecto Supabase activo con URL y ANON KEY
 
 ## Variables de entorno
@@ -33,13 +33,13 @@ VITE_SUPABASE_ANON_KEY=<YOUR-ANON-KEY>
 ## Instalación
 
 ```bash
-pnpm install
+bun install
 ```
 
 ## Desarrollo
 
 ```bash
-pnpm run dev
+bun run dev
 ```
 
 App en `http://localhost:5173/`.
@@ -47,8 +47,8 @@ App en `http://localhost:5173/`.
 ## Build y Preview local
 
 ```bash
-pnpm run build
-pnpm run preview
+bun run build
+bun run preview
 ```
 
 ## Funcionamiento de inventario

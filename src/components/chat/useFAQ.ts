@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { searchHelp, suggestions, KBItem } from '../../lib/helpSearch';
+import { searchHelp, suggestions } from '../../lib/helpSearch';
 
 export function useFAQ() {
   const [open, setOpen] = useState(false);

@@ -1,4 +1,3 @@
-import React from 'react';
 import { es } from '../locales/es';
 
 // Hook simplificado para obtener traducciones
