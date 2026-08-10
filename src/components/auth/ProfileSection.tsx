@@ -5,8 +5,7 @@ import { User, Mail, Calendar, Shield, AlertCircle, CheckCircle } from 'lucide-r
 
 export const ProfileSection = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [stats, setStats] = useState({
     totalProducts: 0,
     activeProducts: 0,

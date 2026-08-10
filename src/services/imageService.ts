@@ -71,10 +71,10 @@ async function uploadFileWithRetry(
   bucket: string,
   path: string,
   file: File,
-  onProgress?: (progress: number) => void
+  _onProgress?: (progress: number) => void
 ): Promise<{ path: string; publicUrl: string }> {
   try {
-    const { data, error } = await pRetry(
+    const { data } = await pRetry(
       async () => {
         const result = await supabase.storage
           .from(bucket)
@@ -93,10 +93,11 @@ async function uploadFileWithRetry(
       {
         retries: 3,
         onFailedAttempt: (error) => {
+          const failedAttempt = error as { attemptNumber: number; message?: string };
           console.warn(
-            `Intento fallido de subida (${error.attemptNumber}/3): ${error.message}`
+            `Intento fallido de subida (${failedAttempt.attemptNumber}/3): ${failedAttempt.message ?? 'sin detalles'}`
           );
-          if (error.attemptNumber >= 3) {
+          if (failedAttempt.attemptNumber >= 3) {
             console.error('Se agotaron los intentos de subida');
           }
         },
@@ -115,8 +116,7 @@ async function uploadFileWithRetry(
       path: data.path,
       publicUrl,
     };
-  } catch (error) {
-    console.error('Error al subir el archivo:', error);
+  } catch {
     throw new Error('Error al subir la imagen');
   }
 }
