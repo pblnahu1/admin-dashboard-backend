@@ -51,8 +51,6 @@ bun run build
 bun run preview
 ```
 
-App en `http://localhost:5173/`.
-
 ## Docker
 
 Construir la imagen:
