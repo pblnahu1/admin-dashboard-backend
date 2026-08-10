@@ -51,7 +51,7 @@ export default [
         ecmaFeatures: { jsx: true },
         // point to the TS config that covers your app sources
         // adjust path if your repo uses a different file (eg. './tsconfig.json')
-        project: './tsconfig.app.json',
+        project: ['./tsconfig.json', './tsconfig.node.json'],
         // ensure the resolver uses this config's directory
         tsconfigRootDir: __dirname,
       },
