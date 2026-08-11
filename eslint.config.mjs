@@ -1,5 +1,5 @@
-path.resolve(import.meta.dirname, 'some/path')
-
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -7,21 +7,25 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 
-export default [
-  // general ignores
-  { ignores: ['dist', '*.config.js', '*.config.cjs', 'supabase/**'] },
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  // JS/JSX files (no TS project)
+export default [
+  // General ignores (agregamos *.config.ts para evitar errores de tsconfig en archivos de config)
+  { 
+    ignores: ['dist', '*.config.js', '*.config.cjs', '*.config.ts', 'eslint.config.mjs', 'supabase/**'] 
+  },
+
+  // JS/JSX files
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'module',
       globals: globals.browser,
-      parser: tsParser, // parser can parse JS; don't set project here
+      parser: tsParser,
       parserOptions: {
         ecmaFeatures: { jsx: true },
-        // no `project` here
       },
     },
     plugins: {
@@ -35,7 +39,7 @@ export default [
     },
   },
 
-  // TypeScript files (only these use parserOptions.project)
+  // TypeScript files
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -45,10 +49,7 @@ export default [
       parser: tsParser,
       parserOptions: {
         ecmaFeatures: { jsx: true },
-        // point to the TS config that covers your app sources
-        // adjust path if your repo uses a different file (eg. './tsconfig.json')
         project: ['./tsconfig.json', './tsconfig.node.json'],
-        // ensure the resolver uses this config's directory
         tsconfigRootDir: __dirname,
       },
     },
@@ -64,16 +65,11 @@ export default [
     },
   },
 
-  // Jest test files: enable jest globals so 'jest/describe/it/expect' are defined
+  // Jest test files
   {
     files: ['**/__tests__/**', '**/*.test.*', '**/*.spec.*'],
     languageOptions: {
       globals: { ...globals.browser, ...globals.jest },
-      // alternatively set env: { jest: true } if preferred
-    },
-    plugins: {
-      // optionally add 'jest' plugin if you want jest-specific rules
-      // 'jest': require('eslint-plugin-jest'),
     },
   },
 ];
