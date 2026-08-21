@@ -49,7 +49,7 @@ export default [
       parser: tsParser,
       parserOptions: {
         ecmaFeatures: { jsx: true },
-        project: ['./tsconfig.json', './tsconfig.node.json'],
+        project: ['./tsconfig.app.json', './tsconfig.node.json'],
         tsconfigRootDir: __dirname,
       },
     },

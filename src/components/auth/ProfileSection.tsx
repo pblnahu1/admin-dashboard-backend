@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { buildProfileUpdatePayload } from '../../lib/userPreferences';
 import {
   User,
   AlertCircle,
@@ -17,6 +18,13 @@ const AVAILABLE_THEMES = [
   { value: 'light', label: 'Claro' },
   { value: 'dark', label: 'Oscuro' },
 ];
+
+type ProfileMetadata = {
+  full_name?: string;
+  avatar_url?: string;
+  preferred_language?: string;
+  preferred_theme?: string;
+};
 
 export const ProfileSection = () => {
   const { user, refreshUser } = useAuth();
@@ -37,7 +45,7 @@ export const ProfileSection = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const userMetadata = user?.user_metadata as Record<string, any> | undefined;
+  const userMetadata = user?.user_metadata as ProfileMetadata | undefined;
 
   useEffect(() => {
     if (!user) return;
@@ -100,41 +108,55 @@ export const ProfileSection = () => {
       return;
     }
 
+    if (newPassword && newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'La contraseña debe tener al menos 6 caracteres.' });
+      return;
+    }
+
+    if (!email.trim()) {
+      setMessage({ type: 'error', text: 'El correo electrónico es obligatorio.' });
+      return;
+    }
+
+    if (avatarUrl.trim()) {
+      try {
+        new URL(avatarUrl.trim());
+      } catch {
+        setMessage({ type: 'error', text: 'La URL del avatar no es válida.' });
+        return;
+      }
+    }
+
     setSaving(true);
     setMessage(null);
 
-    const userMetadataPayload = {
-      full_name: fullName,
-      avatar_url: avatarUrl,
-      preferred_language: preferredLanguage,
-      preferred_theme: preferredTheme,
-    };
-
-    const updatePayload: {
-      email?: string;
-      password?: string;
-      user_metadata: Record<string, any>;
-    } = {
-      user_metadata: userMetadataPayload,
-    };
-
-    if (email !== user.email) {
-      updatePayload.email = email;
-    }
+    const updatePayload = buildProfileUpdatePayload({
+      fullName,
+      email,
+      avatarUrl,
+      preferredLanguage,
+      preferredTheme,
+      currentEmail: user.email ?? '',
+    });
 
     if (newPassword) {
       updatePayload.password = newPassword;
     }
 
-    const { error } = await supabase.auth.updateUser(updatePayload);
+    const { data, error } = await supabase.auth.updateUser(updatePayload);
 
     if (error) {
-      setMessage({ type: 'error', text: error.message });
+      const message = error.status === 422
+        ? `Supabase rechazó los datos enviados: ${error.message}`
+        : error.message;
+      setMessage({ type: 'error', text: message });
       setSaving(false);
       return;
     }
 
-    await refreshUser();
+    if (data.user) {
+      await refreshUser();
+    }
     setNewPassword('');
     setConfirmPassword('');
     setMessage({ type: 'success', text: 'Perfil actualizado correctamente.' });
@@ -143,7 +165,7 @@ export const ProfileSection = () => {
 
   const avatarToShow = avatarUrl || userMetadata?.avatar_url || '';
   const lastSignIn = user?.last_sign_in_at || user?.identities?.[0]?.last_sign_in_at;
-  const confirmedAt = (user as any)?.email_confirmed_at || (user as any)?.confirmed_at;
+  const confirmedAt = user?.email_confirmed_at;
 
   return (
     <div>
